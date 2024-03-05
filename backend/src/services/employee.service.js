@@ -5,14 +5,18 @@ const prisma = new PrismaClient();
 // Create and Save Employees Data in DB
 const saveEmployees = async (employees) => {
   try {
-    await prisma.$transaction(
+    const response = await prisma.$transaction(
       employees.map((employee) =>
         prisma.employee.create({
           data: employee,
         })
       )
     );
-    return { success: true, message: "Employees saved successfully" };
+    return {
+      success: true,
+      message: "Employees saved successfully",
+      data: response,
+    };
   } catch (error) {
     return {
       success: false,

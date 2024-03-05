@@ -1,16 +1,18 @@
 import "./App.css";
 import { Route, Routes, BrowserRouter as Router } from "react-router-dom";
-// import Home from "./components/Home";
+import { Provider } from "react-redux";
+import store from "./store";
 import Dashboard from "./components/Dashboard";
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* <Route path="/" element={<Home />}></Route> */}
-        <Route path="/" element={<Dashboard />}></Route>
-      </Routes>
-    </Router>
+    <Provider store={store}>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Dashboard />}></Route>
+        </Routes>
+      </Router>
+    </Provider>
   );
 }
 

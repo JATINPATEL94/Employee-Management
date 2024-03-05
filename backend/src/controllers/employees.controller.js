@@ -14,12 +14,14 @@ const uploadEmployeeData = async (req, res) => {
     }
 
     // Read Excle File
-    const employees = await parseExcelFile(employeesLocalPath);
+    const response = await parseExcelFile(employeesLocalPath);
 
     // Save to DB
-    const response = await saveEmployees(employees);
-    if (!response) {
-      res.status(404).send("Error when Save Data to Database");
+    const employees = await saveEmployees(response);
+    if (employees.success === false) {
+      res
+        .status(404)
+        .send("Error when Save Data to Database" + employees.message);
     }
 
     res.status(200).json({
@@ -54,24 +56,26 @@ const addEmployeeData = async (req, res) => {
     const formattedJoiningDate = new Date(joiningDate).toISOString();
     const formattedBirthDate = new Date(birthDate).toISOString();
 
-    const newEmployee = await prisma.employee.create({
-      data: {
-        employeeID,
-        firstName,
-        lastName,
-        designation,
-        status,
-        joiningDate: formattedJoiningDate,
-        birthDate: formattedBirthDate,
-        skills,
-        salary,
-      },
+    const newEmployee = {
+      employeeID,
+      firstName,
+      lastName,
+      designation,
+      status,
+      joiningDate: formattedJoiningDate,
+      birthDate: formattedBirthDate,
+      skills,
+      salary,
+    };
+
+    const allEmployee = await prisma.employee.create({
+      data: newEmployee,
     });
 
     res.status(200).json({
       success: true,
       message: "Employee data has been successfully added.",
-      data: newEmployee,
+      data: allEmployee,
     });
   } catch (error) {
     res.status(500).json({
@@ -131,13 +135,14 @@ const deleteEmployeeData = async (req, res) => {
   try {
     const { id } = req.params;
 
-    await prisma.employee.delete({
+    const employee = await prisma.employee.delete({
       where: { employeeID: id },
     });
 
     res.status(200).json({
       success: true,
       message: "Employee data has been successfully deleted.",
+      data: employee,
     });
   } catch (error) {
     res.status(500).json({

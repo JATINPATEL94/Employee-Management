@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { subDays, subHours } from "date-fns";
 import {
   Box,
   Button,
@@ -7,179 +6,144 @@ import {
   Stack,
   SvgIcon,
   Typography,
+  FormControl,
+  FormLabel,
 } from "@mui/material";
-import ArrowDownOnSquareIcon from "@heroicons/react/24/solid/ArrowDownOnSquareIcon";
-import ArrowUpOnSquareIcon from "@heroicons/react/24/solid/ArrowUpOnSquareIcon";
+import { styled } from "@mui/material/styles";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import TextField from "@mui/material/TextField";
 import PlusIcon from "@heroicons/react/24/solid/PlusIcon";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  uploadFileAsync,
+  fetchEmployeesAsync,
+  addEmployeeAsync,
+  updateEmployeeAsync,
+  deleteEmployeeAsync,
+} from "../reducers/employeeSlice";
 import { EmployeesTable } from "./EmployeesTable";
 import { useSelection } from "../hooks/use-selection";
-
-const now = new Date();
-const data = [
-  {
-    employeeID: "001",
-    firstName: "John",
-    lastName: "Doe",
-    designation: "Sr. MERN Stack Developer",
-    status: "present",
-    createdAt: subDays(subHours(now, 7), 1).getTime(),
-    birthDate: subDays(subHours(now, 7), 1).getTime(),
-    skills: ["JavaScript", "React", "Node.js"],
-    salaryDetails: 50000,
-  },
-  {
-    employeeID: "002",
-    firstName: "Jane",
-    lastName: "Smith",
-    designation: "Jr. Django Developer",
-    status: "absent",
-    createdAt: subDays(subHours(now, 1), 2).getTime(),
-    birthDate: subDays(subHours(now, 1), 2).getTime(),
-    skills: ["Python", "Django", "SQL"],
-    salaryDetails: 55000,
-  },
-  {
-    employeeID: "003",
-    firstName: "Michael",
-    lastName: "Johnson",
-    designation: "Sr. Java Developer",
-    status: "present",
-    createdAt: subDays(subHours(now, 5), 3).getTime(),
-    birthDate: subDays(subHours(now, 5), 3).getTime(),
-    skills: ["Java", "Spring Boot", "Hibernate"],
-    salaryDetails: 60000,
-  },
-  {
-    employeeID: "004",
-    firstName: "Emily",
-    lastName: "Brown",
-    designation: "Frontend Developer",
-    status: "present",
-    createdAt: subDays(subHours(now, 3), 4).getTime(),
-    birthDate: subDays(subHours(now, 3), 4).getTime(),
-    skills: ["HTML", "CSS", "JavaScript"],
-    salaryDetails: 48000,
-  },
-  {
-    employeeID: "005",
-    firstName: "David",
-    lastName: "Wilson",
-    designation: "Sr. .NET Developer",
-    status: "absent",
-    createdAt: subDays(subHours(now, 9), 5).getTime(),
-    birthDate: subDays(subHours(now, 9), 5).getTime(),
-    skills: ["C#", ".NET", "SQL Server"],
-    salaryDetails: 62000,
-  },
-  {
-    employeeID: "006",
-    firstName: "Anna",
-    lastName: "Martinez",
-    designation: "Angular Developer",
-    status: "present",
-    createdAt: subDays(subHours(now, 2), 6).getTime(),
-    birthDate: subDays(subHours(now, 2), 6).getTime(),
-    skills: ["Angular", "TypeScript", "RxJS"],
-    salaryDetails: 58000,
-  },
-  {
-    employeeID: "007",
-    firstName: "Daniel",
-    lastName: "Miller",
-    designation: "PHP Developer",
-    status: "present",
-    createdAt: subDays(subHours(now, 6), 7).getTime(),
-    birthDate: subDays(subHours(now, 6), 7).getTime(),
-    skills: ["PHP", "Laravel", "MySQL"],
-    salaryDetails: 54000,
-  },
-  {
-    employeeID: "008",
-    firstName: "Olivia",
-    lastName: "Garcia",
-    designation: "Ruby on Rails Developer",
-    status: "absent",
-    createdAt: subDays(subHours(now, 4), 8).getTime(),
-    birthDate: subDays(subHours(now, 4), 8).getTime(),
-    skills: ["Ruby", "Rails", "PostgreSQL"],
-    salaryDetails: 60000,
-  },
-  {
-    employeeID: "009",
-    firstName: "William",
-    lastName: "Clark",
-    designation: "Sr. Python Developer",
-    status: "present",
-    createdAt: subDays(subHours(now, 8), 9).getTime(),
-    birthDate: subDays(subHours(now, 8), 9).getTime(),
-    skills: ["Python", "Flask", "MongoDB"],
-    salaryDetails: 57000,
-  },
-  {
-    employeeID: "010",
-    firstName: "Sophia",
-    lastName: "Lopez",
-    designation: "Vue.js Developer",
-    status: "present",
-    createdAt: subDays(subHours(now, 1), 10).getTime(),
-    birthDate: subDays(subHours(now, 1), 10).getTime(),
-    skills: ["Vue.js", "Vuex", "Vue Router"],
-    salaryDetails: 59000,
-  },
-];
-
-// Delete after db connection
-
-const usePathname = () => {
-  const [pathname, setPathname] = useState(window.location.pathname);
-
-  const handlePathnameChange = useCallback(() => {
-    setPathname(window.location.pathname);
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener("popstate", handlePathnameChange);
-    return () => {
-      window.removeEventListener("popstate", handlePathnameChange);
-    };
-  }, [handlePathnameChange]);
-
-  return pathname;
-};
-
-// calculate page and rows per page
-const useEmployees = (page, rowsPerPage) => {
-  return useMemo(() => {
-    if (Array.isArray(data)) {
-      const start = page * rowsPerPage;
-      const end = start + rowsPerPage;
-      return data.slice(start, end);
-    }
-    return [];
-  }, [page, rowsPerPage]);
-};
-
-const useEmployeeIds = (employees) => {
-  return useMemo(() => {
-    return employees.map((employee) => employee.employeeID);
-  }, [employees]);
-};
+import {
+  generateEmployeeStatusChart,
+  generateEmployeeSalaryChart,
+  generateEmployeeDesignationChart,
+} from "../features/chart.features";
 
 const Dashboard = () => {
+  // state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  usePathname();
+  const [newEmployeeData, setNewEmployeeData] = useState({
+    employeeID: "",
+    firstName: "",
+    lastName: "",
+    status: "",
+    joiningDate: "",
+    birthDate: "",
+    skills: [],
+    designation: "",
+    salary: 0,
+  });
+
+  // input handler
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    const parsedValue =
+      name === "salary"
+        ? parseInt(value)
+        : name === "skills"
+        ? value.split(",").map((skill) => skill.trim())
+        : value;
+    setNewEmployeeData((prevState) => ({
+      ...prevState,
+      [name]: parsedValue,
+    }));
+  };
+
+  // hooks
+  const dispatch = useDispatch();
+  const employeesData = useSelector((state) => state.employees.employees);
+  const status = useSelector((state) => state.employees.status);
+  const error = useSelector((state) => state.employees.error);
+
+  //Api call
+  useEffect(() => {
+    dispatch(fetchEmployeesAsync());
+  }, [dispatch]);
+
+  // Chart features
+  useEffect(() => {
+    if (status === "succeeded" && employeesData.length > 0) {
+      generateEmployeeStatusChart(employeesData);
+      generateEmployeeSalaryChart(employeesData);
+      generateEmployeeDesignationChart(employeesData);
+    }
+  }, [status, employeesData]);
+
+  // calculate page and rows per page
+  const useEmployees = (page, rowsPerPage) => {
+    return useMemo(() => {
+      if (Array.isArray(employeesData)) {
+        const start = page * rowsPerPage;
+        const end = start + rowsPerPage;
+        return employeesData.slice(start, end);
+      }
+      return [];
+    }, [page, rowsPerPage]);
+  };
   const employees = useEmployees(page, rowsPerPage);
+  const useEmployeeIds = (employees) => {
+    return useMemo(() => {
+      return employees.map((employee) => employee.employeeID);
+    }, [employees]);
+  };
   const employeeIds = useEmployeeIds(employees);
   const employeeSelection = useSelection(employeeIds);
-
   const handlePageChange = useCallback((event, value) => {
     setPage(value);
   }, []);
-
   const handleRowsPerPageChange = useCallback((event) => {
     setRowsPerPage(event.target.value);
   }, []);
+
+  // select employee for edit
+  const select = employeeSelection.selected[0];
+  const selectEmployee = employeesData.find(
+    (employee) => employee.employeeID === select
+  );
+  useEffect(() => {
+    if (selectEmployee) {
+      setNewEmployeeData(selectEmployee);
+    }
+  }, [selectEmployee]);
+
+  //upload file button style
+  const VisuallyHiddenInput = styled("input")({
+    clip: "rect(0 0 0 0)",
+    clipPath: "inset(50%)",
+    height: 1,
+    overflow: "hidden",
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    whiteSpace: "nowrap",
+    width: 1,
+  });
+
+  // handle upload file
+  const fileUploadStatus = useSelector(
+    (state) => state.employees.fileUploadStatus
+  );
+  const fileUploadError = useSelector(
+    (state) => state.employees.fileUploadError
+  );
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      dispatch(uploadFileAsync(file));
+      dispatch(fetchEmployeesAsync());
+    }
+  };
 
   return (
     <>
@@ -195,55 +159,227 @@ const Dashboard = () => {
             <Stack direction="row" justifyContent="space-between" spacing={4}>
               <Stack spacing={1}>
                 <Typography variant="h4">Employees</Typography>
-                <Stack alignItems="center" direction="row" spacing={1}>
-                  <Button
-                    color="inherit"
-                    startIcon={
-                      <SvgIcon fontSize="small">
-                        <ArrowUpOnSquareIcon />
-                      </SvgIcon>
-                    }
-                  >
-                    Import
-                  </Button>
-                  <Button
-                    color="inherit"
-                    startIcon={
-                      <SvgIcon fontSize="small">
-                        <ArrowDownOnSquareIcon />
-                      </SvgIcon>
-                    }
-                  >
-                    Export
-                  </Button>
-                </Stack>
               </Stack>
-              <div>
+              <Stack>
                 <Button
-                  startIcon={
-                    <SvgIcon fontSize="small">
-                      <PlusIcon />
-                    </SvgIcon>
-                  }
+                  component="label"
+                  role={undefined}
                   variant="contained"
+                  tabIndex={-1}
+                  startIcon={<CloudUploadIcon />}
                 >
-                  Add
+                  Upload file
+                  <VisuallyHiddenInput
+                    type="file"
+                    id="file"
+                    onChange={handleFileChange}
+                  />
                 </Button>
-              </div>
+                {fileUploadStatus === "loading" && <div>Uploading...</div>}
+                {fileUploadStatus === "failed" && (
+                  <div>Error: {fileUploadError}</div>
+                )}
+                {fileUploadStatus === "succeeded" && (
+                  <div>File uploaded successfully!</div>
+                )}
+              </Stack>
+              <Stack alignItems="center" direction="row" spacing={1}>
+                <div>
+                  <Button
+                    onClick={() => {
+                      dispatch(addEmployeeAsync(newEmployeeData));
+                    }}
+                    startIcon={
+                      <SvgIcon fontSize="small">
+                        <PlusIcon />
+                      </SvgIcon>
+                    }
+                    variant="contained"
+                  >
+                    Add
+                  </Button>
+                </div>
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    dispatch(
+                      updateEmployeeAsync({
+                        employeeId: newEmployeeData.employeeID,
+                        employeeData: newEmployeeData,
+                      })
+                    );
+                  }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    dispatch(
+                      deleteEmployeeAsync(employeeSelection.selected[0])
+                    );
+                  }}
+                >
+                  Delete
+                </Button>
+              </Stack>
             </Stack>
-            <EmployeesTable
-              count={data.length}
-              items={employees}
-              onDeselectAll={employeeSelection.handleDeselectAll}
-              onDeselectOne={employeeSelection.handleDeselectOne}
-              onPageChange={handlePageChange}
-              onRowsPerPageChange={handleRowsPerPageChange}
-              onSelectAll={employeeSelection.handleSelectAll}
-              onSelectOne={employeeSelection.handleSelectOne}
-              page={page}
-              rowsPerPage={rowsPerPage}
-              selected={employeeSelection.selected}
-            />
+            <FormControl>
+              <Stack direction="row" spacing={1}>
+                <div>
+                  <FormLabel>Employee ID</FormLabel>
+                  <TextField
+                    name="employeeID"
+                    size="small"
+                    type="text"
+                    variant="outlined"
+                    placeholder="Employee ID"
+                    value={newEmployeeData.employeeID}
+                    onChange={handleInputChange}
+                    required
+                  ></TextField>
+                </div>
+                <div>
+                  <FormLabel>First Name</FormLabel>
+                  <TextField
+                    name="firstName"
+                    size="small"
+                    type="text"
+                    variant="outlined"
+                    placeholder="First Name"
+                    value={newEmployeeData.firstName}
+                    onChange={handleInputChange}
+                    required
+                  ></TextField>
+                </div>
+                <div>
+                  <FormLabel>Last Name</FormLabel>
+                  <TextField
+                    name="lastName"
+                    size="small"
+                    type="text"
+                    variant="outlined"
+                    placeholder="Last Name"
+                    value={newEmployeeData.lastName}
+                    onChange={handleInputChange}
+                    required
+                  ></TextField>
+                </div>
+                <div>
+                  <FormLabel>Designation</FormLabel>
+                  <TextField
+                    name="designation"
+                    size="small"
+                    type="text"
+                    variant="outlined"
+                    placeholder="Designation"
+                    value={newEmployeeData.designation}
+                    onChange={handleInputChange}
+                    required
+                  ></TextField>
+                </div>
+                <div>
+                  <FormLabel>Status</FormLabel>
+                  <TextField
+                    name="status"
+                    size="small"
+                    type="text"
+                    variant="outlined"
+                    placeholder="Status"
+                    value={newEmployeeData.status}
+                    onChange={handleInputChange}
+                    required
+                  ></TextField>
+                </div>
+                <div>
+                  <FormLabel>Joining Date</FormLabel>
+                  <TextField
+                    name="joiningDate"
+                    size="small"
+                    type="date"
+                    variant="outlined"
+                    value={newEmployeeData.joiningDate}
+                    onChange={handleInputChange}
+                    required
+                  ></TextField>
+                </div>
+                <div>
+                  <FormLabel>Birth Date</FormLabel>
+                  <TextField
+                    name="birthDate"
+                    size="small"
+                    type="date"
+                    variant="outlined"
+                    value={newEmployeeData.birthDate}
+                    onChange={handleInputChange}
+                    required
+                  ></TextField>
+                </div>
+                <div>
+                  <FormLabel>Skills</FormLabel>
+                  <TextField
+                    name="skills"
+                    size="small"
+                    type="text"
+                    variant="outlined"
+                    placeholder="Skills"
+                    value={newEmployeeData.skills}
+                    onChange={handleInputChange}
+                    required
+                  ></TextField>
+                </div>
+                <div>
+                  <FormLabel>salary</FormLabel>
+                  <TextField
+                    name="salary"
+                    size="small"
+                    type="number"
+                    variant="outlined"
+                    placeholder="Salary"
+                    value={newEmployeeData.salary}
+                    onChange={handleInputChange}
+                    required
+                  ></TextField>
+                </div>
+              </Stack>
+            </FormControl>
+            {status === "loading" && <div>Loading...</div>}
+            {status === "failed" && <div>Error: {error}</div>}
+            {status === "succeeded" && employeesData.length > 0 && (
+              <EmployeesTable
+                count={employeesData.length}
+                items={employeesData}
+                onDeselectAll={employeeSelection.handleDeselectAll}
+                onDeselectOne={employeeSelection.handleDeselectOne}
+                onPageChange={handlePageChange}
+                onRowsPerPageChange={handleRowsPerPageChange}
+                onSelectAll={employeeSelection.handleSelectAll}
+                onSelectOne={employeeSelection.handleSelectOne}
+                page={page}
+                rowsPerPage={rowsPerPage}
+                selected={employeeSelection.selected}
+              />
+            )}
+          </Stack>
+          <Stack spacing={3} justifyContent="space-between" direction="row">
+            <div style={{ position: "relative", width: "50%" }}>
+              <Typography variant="h5" marginY={"50px"}>
+                Employee Status Chart
+              </Typography>
+              <canvas id="employeeStatusChart" />
+            </div>
+            <div style={{ position: "relative", width: "50%" }}>
+              <Typography variant="h5" marginY={"50px"}>
+                Employee Salary Chart
+              </Typography>
+              <canvas id="employeeSalaryChart" />
+            </div>
+          </Stack>
+          <Stack>
+            <Typography variant="h5" marginY={"50px"}>
+              Employee Designation Chart
+            </Typography>
+            <canvas id="employeeDesignationChart" />
           </Stack>
         </Container>
       </Box>

@@ -2,10 +2,8 @@ import PropTypes from "prop-types";
 import { format } from "date-fns";
 import {
   Box,
-  Button,
   Card,
   Checkbox,
-  SvgIcon,
   Table,
   TableBody,
   TableCell,
@@ -13,7 +11,6 @@ import {
   TablePagination,
   TableRow,
 } from "@mui/material";
-import PlusIcon from "@heroicons/react/24/solid/PlusIcon";
 
 export const EmployeesTable = (props) => {
   const {
@@ -28,13 +25,13 @@ export const EmployeesTable = (props) => {
     page = 0,
     rowsPerPage = 0,
     selected = [],
-    onAddCustomDetails,
-    onEditEmployee,
   } = props;
 
+  const sortedItems = items
+    .slice()
+    .sort((a, b) => a.employeeID.localeCompare(b.employeeID));
   const selectedSome = selected.length > 0 && selected.length < items.length;
   const selectedAll = items.length > 0 && selected.length === items.length;
-
   return (
     <Card>
       <Box sx={{ minWidth: 800 }}>
@@ -63,24 +60,13 @@ export const EmployeesTable = (props) => {
               <TableCell>Birth Date</TableCell>
               <TableCell>Skills</TableCell>
               <TableCell>Salary Details</TableCell>
-              <TableCell>
-                <Button
-                  startIcon={
-                    <SvgIcon>
-                      <PlusIcon />
-                    </SvgIcon>
-                  }
-                  variant="outlined"
-                  onClick={onAddCustomDetails}
-                ></Button>
-              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {items.map((employee) => {
+            {sortedItems.map((employee) => {
               const isSelected = selected.includes(employee.employeeID);
-              const createdAt = format(
-                new Date(employee.createdAt),
+              const joiningDate = format(
+                new Date(employee.joiningDate),
                 "dd/MM/yyyy"
               );
               const birthDate = format(
@@ -107,18 +93,10 @@ export const EmployeesTable = (props) => {
                   <TableCell>{employee.lastName}</TableCell>
                   <TableCell>{employee.designation}</TableCell>
                   <TableCell>{employee.status}</TableCell>
-                  <TableCell>{createdAt}</TableCell>
+                  <TableCell>{joiningDate}</TableCell>
                   <TableCell>{birthDate}</TableCell>
                   <TableCell>{employee.skills.join(", ")}</TableCell>
-                  <TableCell>{employee.salaryDetails} </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outlined"
-                      onClick={() => onEditEmployee(employee.employeeID)}
-                    >
-                      Edit
-                    </Button>
-                  </TableCell>
+                  <TableCell>{employee.salary} </TableCell>
                 </TableRow>
               );
             })}
